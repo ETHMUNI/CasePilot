@@ -1,0 +1,23 @@
+# Local AI assistant instructions and skills (never commit)
+AGENTS.md
+CLAUDE.md
+.agents/
+.claude/
+.codex/
+.cursor/rules/
+.github/instructions/
+.github/prompts/
+*.instructions.md
+*.prompt.md
+
+# Python and local development
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.env
+.env.*
+!.env.example
+.DS_Store
