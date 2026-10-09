@@ -289,18 +289,22 @@ Eksempelvis kunne et eksisterende supportværktøj sende en ny sag til CasePilot
 
 ### AI
 
+- LangChain (LLM-integration, embeddings og retrieval)
+- LangGraph (AI-workflow og state management)
 - LLM API eller lokal model via Ollama
-- Embeddings
-- Structured output
-- Retrieval-Augmented Generation
-- Semantic search
+- Structured output via Pydantic
+- Retrieval-Augmented Generation (RAG)
+- Semantic search med pgvector
 
-### Testing
+LangChain og LangGraph er planlagte teknologier; de introduceres, når AI-workflowet implementeres.
+
+### Testing og AI-evaluering
 
 - pytest
 - Unit tests
 - Integration tests
-- AI evaluation tests
+- AI evaluation tests (klassifikation, retrieval og groundedness)
+- Versionerede evalueringsdatasæt og sammenligning af modeller/prompts
 
 ### Infrastructure
 
