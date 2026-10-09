@@ -298,6 +298,21 @@ Eksempelvis kunne et eksisterende supportværktøj sende en ny sag til CasePilot
 
 LangChain og LangGraph er planlagte teknologier; de introduceres, når AI-workflowet implementeres.
 
+### Lokal backendudvikling
+
+Backendmiljøet bruger Python 3.12.2 og uv. Installér uv, og kør derefter:
+
+```bash
+cd backend
+uv sync --dev
+cp .env.example .env
+uv run --env-file .env uvicorn casepilot.main:app --reload --app-dir src
+```
+
+API'et kører som standard på `http://127.0.0.1:8000`, og `GET /health` returnerer
+`{"status":"ok"}`. Udviklingsværktøjer køres fra `backend/` med `uv run pytest`,
+`uv run ruff check .`, `uv run ruff format --check .` og `uv run mypy`.
+
 ### Testing og AI-evaluering
 
 - pytest
