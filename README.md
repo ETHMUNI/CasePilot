@@ -287,6 +287,47 @@ Eksempelvis kunne et eksisterende supportværktøj sende en ny sag til CasePilot
 - PostgreSQL
 - pgvector
 
+#### Lokal database
+
+Docker Compose kører PostgreSQL med pgvector på `127.0.0.1:5432`. Opret først en
+lokal `.env` med en tilfældig adgangskode. Filen bliver ikke committet:
+
+```bash
+python3 -c '
+from pathlib import Path
+import secrets
+
+path = Path(".env")
+if not path.exists():
+    path.write_text(
+        "POSTGRES_DB=casepilot\n"
+        "POSTGRES_USER=casepilot\n"
+        f"POSTGRES_PASSWORD={secrets.token_hex(32)}\n"
+        "POSTGRES_PORT=5432\n"
+    )
+'
+docker compose up -d
+docker compose ps
+```
+
+Kommandoen opretter kun `.env`, hvis filen ikke allerede findes. `POSTGRES_PORT`
+kan ændres i filen, hvis port 5432 allerede er i brug. Kommandoerne viser logs og
+stopper databasen; `down` bevarer data i det navngivne volume:
+
+```bash
+docker compose logs -f db
+docker compose down
+```
+
+For at nulstille databasen og slette alle dens data:
+
+```bash
+docker compose down -v
+```
+
+Start den igen med `docker compose up -d`. API'et køres fortsat lokalt via uv
+som beskrevet i afsnittet om backendudvikling.
+
 ### AI
 
 - LangChain (LLM-integration, embeddings og retrieval)
