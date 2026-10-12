@@ -360,8 +360,25 @@ transaktioner rulles tilbage, når sessionen lukkes.
 API'et kører som standard på `http://127.0.0.1:8000`, og `GET /health` returnerer
 `{"status":"ok"}`. Kør tests og værktøjer fra `backend/`, mens databasen er startet:
 
+Opret testdatabasen én gang, og tilføj `CASEPILOT_TEST_DATABASE=casepilot_test`
+til `.env` i projektroden. Testdatabasen skal have et andet navn end `POSTGRES_DB`;
+testene afviser samme database for at beskytte udviklingsdata. Smoketesten udfører
+kun forbindelseskontrol og `SELECT 1`.
+
 ```bash
-uv run --env-file ../.env pytest
+docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE casepilot_test"'
+```
+
+Den ene kommando til at køre både unit- og integrationstestene er:
+
+```bash
+uv run --env-file ../.env pytest -q
+```
+
+Tests ligger i `tests/unit/` og `tests/integration/`. Integrationstestene bruger
+kun den særskilt konfigurerede testdatabase. De øvrige udviklingschecks køres sådan:
+
+```bash
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
