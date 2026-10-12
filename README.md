@@ -41,7 +41,11 @@ Målet er at gøre medarbejderen hurtigere og bedre informeret.
 
 ---
 
-## 2. Features
+## 2. Planned Features
+
+Funktionerne nedenfor beskriver produktets mål. De er ikke implementeret i den
+nuværende Week 1-version; se [arkitekturoversigten](docs/architecture.md) for
+den aktuelle kode og de fremtidige dele.
 
 ### Case ingestion
 
@@ -175,7 +179,13 @@ Dette gør processen sporbar.
 
 ## 3. Architecture
 
-CasePilot designes som en separat service, der kan integreres med et eksisterende support- eller sagsbehandlingssystem.
+CasePilot designes som en modulær monolit og et AI-lag, der supplerer et
+eksisterende support- eller sagsbehandlingssystem. Det er ikke tænkt som en
+erstatning for systemet, der ejer sagerne og kundekommunikationen.
+
+Se [arkitekturoversigten](docs/architecture.md) for skellet mellem det
+implementerede fundament og planlagte funktioner, og [ADR 0001](docs/adr/0001-python-fastapi-postgresql-sqlalchemy.md)
+for de indledende teknologivalg.
 
 ```text
                          Existing Support System
@@ -202,11 +212,13 @@ CasePilot designes som en separat service, der kan integreres med et eksisterend
              PostgreSQL
 ```
 
-### Backend API
+Diagrammet viser den tilsigtede arkitektur. I den nuværende Week 1-version findes
+kun FastAPI health-endpointet og databasefundamentet; case management, AI,
+knowledge retrieval og eksterne integrationer er fremtidige dele.
 
-FastAPI fungerer som systemets centrale API.
+### Planned backend API
 
-API'et håndterer blandt andet:
+FastAPI er valgt til systemets API. Den planlagte API-flade omfatter:
 
 - sager
 - brugere
@@ -217,9 +229,10 @@ API'et håndterer blandt andet:
 
 ---
 
-### Application layer
+### Planned application layer
 
-Forretningslogikken holdes adskilt fra AI-integrationen.
+Forretningslogik skal holdes adskilt fra HTTP, persistence og AI-integrationen.
+Følgende er eksempler på mulige fremtidige use cases, ikke eksisterende klasser:
 
 Eksempel:
 
@@ -231,11 +244,10 @@ SuggestionService
 ReviewService
 ```
 
-På den måde kan dele af systemet fungere, selv hvis AI-servicen ikke er tilgængelig.
+Denne opdeling gør det muligt at holde almindelige use cases adskilt fra AI,
+når de moduler bliver implementeret.
 
----
-
-### AI layer
+### Planned AI layer
 
 AI-komponenten håndterer:
 
@@ -245,21 +257,24 @@ AI-komponenten håndterer:
 - retrieval
 - response generation
 
-LLM-output skal valideres, før det anvendes af resten af systemet.
+LLM-output skal valideres, før det anvendes af resten af systemet. AI-integrationen
+er ikke implementeret endnu.
 
 ---
 
 ### Data layer
 
-PostgreSQL anvendes til almindelige relationelle data.
+PostgreSQL anvendes nu til databasefundamentet og er valgt til almindelige
+relationelle data.
 
-`pgvector` anvendes til embeddings og semantic search.
+`pgvector`-udvidelsen aktiveres af migrationen. Lagring af embeddings og
+semantic search er planlagt, men implementeres ikke i Week 1.
 
 Det betyder, at systemet ikke behøver en separat vector database i den første version.
 
 ---
 
-### Integration layer
+### Planned integration layer
 
 CasePilot skal på sigt kunne integreres med eksisterende systemer gennem:
 
@@ -431,7 +446,10 @@ En senere version kan erstattes af en dedikeret frontend såsom:
 
 ---
 
-## 5. Database Entities
+## 5. Planned Database Entities
+
+Dette er forslag til den fremtidige domænemodel. Der findes endnu ingen
+SQLAlchemy-modeller eller databaseskema for disse entiteter.
 
 ### Customer
 
@@ -635,7 +653,10 @@ rejected
 
 ---
 
-## 6. AI / RAG Flow
+## 6. Planned AI / RAG Flow
+
+Flowet nedenfor er fremtidig funktionalitet; AI- og retrieval-komponenterne er
+ikke implementeret.
 
 AI-flowet opdeles i flere separate trin.
 
