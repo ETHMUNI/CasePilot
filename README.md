@@ -384,6 +384,19 @@ uv run ruff format --check .
 uv run mypy
 ```
 
+### GitHub Actions og pull requests
+
+GitHub Actions kører backendens Ruff lint- og formatting checks, mypy, unit tests
+og integration tests ved hver pull request samt ved push til `main`. CI installerer
+Python fra `backend/.python-version` og de låste afhængigheder fra `backend/uv.lock`.
+PostgreSQL-testservicen og dens midlertidige credentials bruges kun i workflowet;
+ingen produktionshemmeligheder er nødvendige.
+
+En pull request er klar til review, når checket `CI / Python checks` er grønt.
+Ret eventuelle fejl og vent på en ny vellykket kørsel, før ændringen merges.
+Repositoryets branch protection kan kræve `CI / Python checks` for at håndhæve
+denne regel.
+
 ### Testing og AI-evaluering
 
 - pytest
