@@ -352,9 +352,10 @@ uv run --env-file ../.env uvicorn casepilot.main:app --reload --app-dir src
 
 Alembic opretter `vector`-udvidelsen og sin versions-tabel. Migrationen kan køres
 igen uden fejl. API'et kontrollerer forbindelsen ved opstart og viser en tydelig
-fejl, hvis databasen ikke er tilgængelig. Hver request får sin egen SQLAlchemy-
-session, som lukkes efter requesten. Ændringer skal committes eksplicit; åbne,
-ikke-committede transaktioner rulles tilbage, når sessionen lukkes.
+fejl, hvis databasen ikke er tilgængelig. Databaseafhængigheden kan give
+databasebrugende endpoints deres egen SQLAlchemy-session, som lukkes efter
+requesten. Ændringer skal committes eksplicit; åbne, ikke-committede
+transaktioner rulles tilbage, når sessionen lukkes.
 
 API'et kører som standard på `http://127.0.0.1:8000`, og `GET /health` returnerer
 `{"status":"ok"}`. Kør tests og værktøjer fra `backend/`, mens databasen er startet:
