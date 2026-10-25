@@ -38,9 +38,10 @@ provide explicit session handling and repeatable schema changes.
   is an additional planned capability, not a reason to store all data as
   documents.
 - Python's runtime typing is supplemented by mypy and tests.
-- No case-management models, ticketing connectors, LLM framework, retrieval
-  pipeline, or human-review workflow is implied by this decision; those require
-  separate implementation work.
+- The decision did not define the full case-management feature set. Basic
+  Customer/Case persistence is implemented separately; HTTP case routes,
+  ticketing connectors, an LLM framework, retrieval, and human review still
+  require separate implementation work.
 
 ## Alternatives considered
 

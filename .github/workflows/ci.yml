@@ -60,6 +60,10 @@ jobs:
           PGPASSWORD: ci-only-password
         run: psql -h 127.0.0.1 -U casepilot -d casepilot -c 'CREATE DATABASE casepilot_test'
 
+      - name: Apply migrations to integration-test database
+        working-directory: backend
+        run: POSTGRES_DB=casepilot_test uv run alembic upgrade head
+
       - name: Ruff lint
         working-directory: backend
         run: uv run ruff check .

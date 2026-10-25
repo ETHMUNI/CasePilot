@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
 from casepilot.config import get_settings
+from casepilot.models import Base
 
 config = context.config
 database_url = get_settings().database_url
@@ -11,7 +12,7 @@ database_url = get_settings().database_url
 def run_migrations_offline() -> None:
     context.configure(
         url=database_url.render_as_string(hide_password=True),
-        target_metadata=None,
+        target_metadata=Base.metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -24,7 +25,7 @@ def run_migrations_online() -> None:
     connectable = create_engine(database_url, poolclass=NullPool)
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=None)
+        context.configure(connection=connection, target_metadata=Base.metadata)
 
         with context.begin_transaction():
             context.run_migrations()
