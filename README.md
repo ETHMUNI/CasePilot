@@ -384,6 +384,12 @@ kun forbindelseskontrol og `SELECT 1`.
 docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE casepilot_test"'
 ```
 
+Anvend schema-migrationerne på testdatabasen, også når en ny migration tilføjes:
+
+```bash
+POSTGRES_DB=casepilot_test uv run --env-file ../.env alembic upgrade head
+```
+
 Den ene kommando til at køre både unit- og integrationstestene er:
 
 ```bash
@@ -446,21 +452,21 @@ En senere version kan erstattes af en dedikeret frontend såsom:
 
 ---
 
-## 5. Planned Database Entities
+## 5. Database Entities
 
-Dette er forslag til den fremtidige domænemodel. Der findes endnu ingen
-SQLAlchemy-modeller eller databaseskema for disse entiteter.
+`Customer` og `Case` har SQLAlchemy-modeller og migrationer. De øvrige entiteter
+nedenfor er stadig forslag til fremtidig funktionalitet.
 
 ### Customer
 
 Repræsenterer virksomheden, der har oprettet sagen.
 
-Mulige felter:
+Implementerede felter:
 
 ```text
-id
+id (UUID)
 name
-external_id
+external_id (optional)
 created_at
 ```
 
@@ -508,26 +514,20 @@ description
 
 ### Case
 
-Repræsenterer en kundehenvendelse.
+Repræsenterer en kundehenvendelse knyttet til én `Customer`.
 
-Mulige felter:
+Implementerede felter:
 
 ```text
-id
-external_id
-customer_id
+id (UUID)
+external_id (optional)
+customer_id (foreign key to customers.id)
 title
-description
-status
-category
-subcategory
-priority
-assigned_user_id
-assigned_team_id
-source
+description (optional)
+status: open | in_progress | resolved | closed
+priority: low | medium | high | urgent
 created_at
 updated_at
-closed_at
 ```
 
 ---
