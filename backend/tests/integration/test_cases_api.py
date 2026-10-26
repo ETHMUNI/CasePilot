@@ -203,6 +203,17 @@ def test_get_case_returns_422_for_malformed_uuid(api_client: TestClient) -> None
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize("field", ["status", "priority"])
+def test_patch_case_returns_422_for_null_status_and_priority(
+    openapi_client: TestClient, field: str
+) -> None:
+    response = openapi_client.patch(
+        "/cases/00000000-0000-0000-0000-000000000001", json={field: None}
+    )
+
+    assert response.status_code == 422
+
+
 @pytest.mark.parametrize(
     "query_params",
     [
