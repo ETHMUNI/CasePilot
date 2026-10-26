@@ -17,6 +17,10 @@ class CaseUpdate(BaseModel):
             raise ValueError("at least one field must be provided")
         if "title" in self.model_fields_set and self.title is None:
             raise ValueError("title must not be null")
+        if "status" in self.model_fields_set and self.status is None:
+            raise ValueError("status must not be null")
+        if "priority" in self.model_fields_set and self.priority is None:
+            raise ValueError("priority must not be null")
         if self.title is not None and not self.title.strip():
             raise ValueError("title must not be blank")
         return self
