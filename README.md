@@ -362,6 +362,7 @@ Backendmiljøet bruger Python 3.12.2 og uv. Installér uv, og kør derefter:
 cd backend
 uv sync --dev
 uv run --env-file ../.env alembic upgrade head
+uv run --env-file ../.env python -m casepilot.seed_demo_data
 uv run --env-file ../.env uvicorn casepilot.main:app --reload --app-dir src
 ```
 
@@ -373,7 +374,18 @@ requesten. Ændringer skal committes eksplicit; åbne, ikke-committede
 transaktioner rulles tilbage, når sessionen lukkes.
 
 API'et kører som standard på `http://127.0.0.1:8000`, og `GET /health` returnerer
-`{"status":"ok"}`. Kør tests og værktøjer fra `backend/`, mens databasen er startet:
+`{"status":"ok"}`. Seed-kommandoen opretter syntetiske kunder og sager med
+eksempler på autentificering, integrationer og fakturering. Den kan køres igen
+uden at oprette dubletter og indeholder ingen rigtige personoplysninger.
+
+Når API'et kører, kan du i en anden terminal kontrollere, at de seedede sager
+kan læses gennem API'et. Svaret bør vise `"total": 6`:
+
+```bash
+curl -fsS 'http://127.0.0.1:8000/cases?limit=20&offset=0'
+```
+
+Kør tests og værktøjer fra `backend/`, mens databasen er startet:
 
 Opret testdatabasen én gang, og tilføj `CASEPILOT_TEST_DATABASE=casepilot_test`
 til `.env` i projektroden. Testdatabasen skal have et andet navn end `POSTGRES_DB`;
