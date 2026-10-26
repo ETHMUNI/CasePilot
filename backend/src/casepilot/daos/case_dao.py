@@ -36,6 +36,10 @@ class CaseDAO:
     def get_by_id(self, case_id: UUID) -> Case | None:
         return self._session.get(Case, case_id)
 
+    def get_by_external_id(self, external_id: str) -> Case | None:
+        statement = select(Case).where(Case.external_id == external_id)
+        return self._session.scalar(statement)
+
     def list(
         self, *, status: CaseStatus | None, limit: int, offset: int
     ) -> tuple[list[Case], int]:

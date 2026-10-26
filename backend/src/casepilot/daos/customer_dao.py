@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from casepilot.models import Customer
@@ -17,6 +18,10 @@ class CustomerDAO:
 
     def get_by_id(self, customer_id: UUID) -> Customer | None:
         return self._session.get(Customer, customer_id)
+
+    def get_by_external_id(self, external_id: str) -> Customer | None:
+        statement = select(Customer).where(Customer.external_id == external_id)
+        return self._session.scalar(statement)
 
     def update(self, customer_id: UUID, *, name: str) -> Customer | None:
         customer = self.get_by_id(customer_id)
