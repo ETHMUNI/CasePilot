@@ -1,7 +1,9 @@
 from uuid import UUID
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from casepilot.daos.unset import UNSET, Unset
 from casepilot.models import Case, CasePriority, CaseStatus
 
 
@@ -34,20 +36,42 @@ class CaseDAO:
     def get_by_id(self, case_id: UUID) -> Case | None:
         return self._session.get(Case, case_id)
 
+    def list(
+        self, *, status: CaseStatus | None, limit: int, offset: int
+    ) -> tuple[list[Case], int]:
+        statement = select(Case)
+        count_statement = select(func.count()).select_from(Case)
+        if status is not None:
+            statement = statement.where(Case.status == status)
+            count_statement = count_statement.where(Case.status == status)
+        cases = self._session.scalars(
+            statement.order_by(Case.created_at.desc(), Case.id)
+            .limit(limit)
+            .offset(offset)
+        ).all()
+        total = self._session.scalar(count_statement)
+        return list(cases), total or 0
+
     def update(
         self,
         case_id: UUID,
         *,
-        title: str,
-        status: CaseStatus,
-        priority: CasePriority,
+        title: str | None = None,
+        description: str | None | Unset = UNSET,
+        status: CaseStatus | None = None,
+        priority: CasePriority | None = None,
     ) -> Case | None:
         case = self.get_by_id(case_id)
         if case is None:
             return None
 
-        case.title = title
-        case.status = status
-        case.priority = priority
+        if title is not None:
+            case.title = title
+        if not isinstance(description, Unset):
+            case.description = description
+        if status is not None:
+            case.status = status
+        if priority is not None:
+            case.priority = priority
         self._session.flush()
         return case

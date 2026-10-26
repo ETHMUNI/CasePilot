@@ -61,6 +61,23 @@ def test_update_case_persists_changes(db_session: Session) -> None:
     assert updated_case.priority is CasePriority.URGENT
 
 
+def test_update_case_can_clear_description(db_session: Session) -> None:
+    customer = CustomerDAO(db_session).create(name="Contoso")
+    case_dao = CaseDAO(db_session)
+    case = case_dao.create(
+        customer_id=customer.id,
+        title="Cannot sign in",
+        description="Login fails",
+        status=CaseStatus.OPEN,
+        priority=CasePriority.HIGH,
+    )
+
+    updated_case = case_dao.update(case.id, description=None)
+
+    assert updated_case is not None
+    assert updated_case.description is None
+
+
 def test_create_case_rejects_unknown_customer_reference(db_session: Session) -> None:
     with pytest.raises(IntegrityError):
         CaseDAO(db_session).create(
