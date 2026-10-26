@@ -46,9 +46,7 @@ class CaseService:
 
     def update(self, case_id: UUID, request: CaseUpdate) -> Case:
         description = (
-            request.description
-            if "description" in request.model_fields_set
-            else UNSET
+            request.description if "description" in request.model_fields_set else UNSET
         )
         case = self._cases.update(
             case_id,
