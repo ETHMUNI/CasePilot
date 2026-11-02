@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from casepilot.schemas.case_response import CaseResponse
+from casepilot.responses.case_response import CaseResponse
 
 
 class CaseListResponse(BaseModel):

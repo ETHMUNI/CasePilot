@@ -7,8 +7,8 @@ from casepilot.daos.unset import UNSET
 from casepilot.exceptions.case_not_found_error import CaseNotFoundError
 from casepilot.exceptions.customer_not_found_error import CustomerNotFoundError
 from casepilot.models import Case, CaseStatus
-from casepilot.schemas.case_create_request import CaseCreate
-from casepilot.schemas.case_update_request import CaseUpdate
+from casepilot.requests.case_create_request import CaseCreate
+from casepilot.requests.case_update_request import CaseUpdate
 
 
 class CaseService:

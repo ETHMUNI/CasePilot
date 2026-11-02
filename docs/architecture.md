@@ -18,41 +18,52 @@ responsibilities separated into Python modules. It is not a collection of
 services. Modules and integration adapters should be introduced when their
 behavior is implemented, rather than creating empty layers in advance.
 
+Packages are organized by responsibility and dependency direction, rather than
+putting every module for a broad feature or technology into one package. For
+example, request and response contracts belong in `requests` and `responses`,
+application logic in `services`, provider-specific code in `integrations/llm`,
+and exceptions in `exceptions`. This is a lightweight convention, not a
+requirement to introduce every Clean Architecture layer or a package for each
+class.
+
 ## Current implementation
 
-The repository currently provides the backend foundation and basic
-Customer/Case persistence. It does not yet expose case-management or AI APIs:
+The repository provides Customer/Case persistence, a case-management REST API,
+and an optional LLM-based case-analysis endpoint:
 
 | Area | Implemented responsibility |
 | --- | --- |
-| `casepilot.main` | Creates the FastAPI application, checks database connectivity at startup, disposes the engine at shutdown, and exposes `GET /health`. |
+| `casepilot.main` | Creates the FastAPI application, checks database connectivity at startup, disposes the engine at shutdown, and registers health, case-management, and case-analysis routes. |
 | `casepilot.config` | Reads environment settings and constructs the PostgreSQL connection URL. |
 | `casepilot.database` | Creates the SQLAlchemy engine and session factory, exposes a session dependency, and checks connectivity. |
 | `casepilot.models` | Defines Customer and Case persistence models, enum values, timestamps, and their relationship. |
+| `casepilot.requests` and `casepilot.responses` | Define API and analysis input/output data contracts. |
 | `casepilot.daos.customer_dao` and `casepilot.daos.case_dao` | Provide create/read/update access patterns for their respective entity. |
+| `casepilot.services` | Coordinates case operations and case analysis independently of HTTP transport. |
+| `casepilot.integrations.llm` | Builds the configured LLM provider and adapts LangChain models to the analysis-provider contract. |
+| `casepilot.exceptions` | Defines application and configuration exceptions. |
 | Alembic migrations | Establish the PostgreSQL `vector` extension and create the Customer/Case schema. |
 | Docker Compose | Runs local PostgreSQL with pgvector. |
 | Tests and GitHub Actions | Run unit and database/API integration tests, Ruff, and mypy. |
 
-`get_session` is available for routes that need a database session, but no
-current route depends on it. Customer and Case can be persisted through their
-DAOs, but HTTP CRUD endpoints are not part of this issue. The
-health route returns application health after the startup database connectivity
-check; it does not use a request-scoped session.
+Case-management routes use request-scoped database sessions and delegate case
+operations to services and DAOs. The analysis route reads a case, invokes the
+configured provider, and returns a validated suggestion without changing the
+case. Analysis is disabled by default; provider errors do not affect ordinary
+case endpoints.
 
 ## Intended module and infrastructure boundaries
 
-The following boundaries describe where later behavior belongs. They are design
-guidance, not claims that these features already exist.
+The following boundaries describe the implemented structure and planned work.
 
 | Boundary | Responsibility | Status |
 | --- | --- | --- |
-| HTTP/API | FastAPI routes and Pydantic request/response validation. | Health endpoint only today; case and integration endpoints are future work. |
-| Application/domain | Coordinates use cases and keeps business rules independent of HTTP, SQL, and model providers. | Not implemented yet. |
+| HTTP/API | FastAPI routes and Pydantic request/response validation. | Health, case-management, and case-analysis endpoints are implemented. |
+| Application/domain | Coordinates use cases and keeps business rules independent of HTTP, SQL, and model providers. | Case services are implemented; broader AI and review workflows remain future work. |
 | Persistence | SQLAlchemy sessions and PostgreSQL access; Alembic owns schema changes. | Customer and Case models and DAOs exist; user and other domain models do not. |
-| AI | Calls a model for analysis and validates structured output before application logic uses it. | Planned; no model provider or AI workflow is installed. |
+| AI integration | Calls a model for analysis and validates structured output before application logic uses it. | Optional OpenAI and Ollama providers are available through a LangChain adapter; disabled by default. |
 | Knowledge retrieval | Loads approved internal material and retrieves supporting passages. PostgreSQL with pgvector is the initial storage/search choice. | Planned; no document ingestion, embeddings, or vector queries exist. |
-| External integrations | Connects to the existing ticketing system and, later, an LLM provider through explicit adapters. | Not implemented yet. |
+| External integrations | Connects to the existing ticketing system and LLM providers through explicit adapters. | LLM adapters exist; ticketing-system integration is not implemented. |
 | Human review | Presents suggestions with their sources and records an employee's decision. | Planned; no suggestions, review flow, or audit records exist. |
 
 As the product grows, code should remain in this backend and these boundaries
@@ -73,8 +84,8 @@ The future case-assistance flow is:
 5. The employee decides what to change or communicate in the existing support
    workflow.
 
-Only the database connectivity and basic HTTP health check are implemented now.
-The ingestion, analysis, retrieval, suggestion, and review steps above are
+Case management and a minimal analysis call are implemented. Analysis results
+are not persisted; ingestion, retrieval, human review, and audit history remain
 future work.
 
 ## Local setup
