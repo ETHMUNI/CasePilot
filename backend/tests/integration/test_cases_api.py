@@ -1,5 +1,6 @@
 from collections.abc import Generator
 from typing import Any
+from unittest.mock import Mock
 from uuid import UUID
 
 import pytest
@@ -12,6 +13,9 @@ from casepilot.database import get_session
 from casepilot.integrations.llm.dependencies import get_case_analysis_service
 from casepilot.integrations.llm.fake_analysis_provider import FakeAnalysisProvider
 from casepilot.main import app
+from casepilot.models import CasePriority
+from casepilot.requests.case_analysis_request import CaseAnalysisRequest
+from casepilot.responses.case_analysis_response import CaseAnalysis
 from casepilot.services.case_analysis_service import CaseAnalysisService
 
 
@@ -225,6 +229,31 @@ def test_analysis_endpoint_returns_fake_suggestion_without_changing_case(
     assert response.json()["suggested_priority"] == "medium"
     assert response.json()["recommended_next_step"]
     assert case_response.json()["priority"] == "high"
+
+
+def test_analysis_endpoint_releases_database_session_before_analysis(
+    api_client: TestClient, db_session: Session
+) -> None:
+    customer_id = _create_customer(db_session)
+    created_case = _create_case(api_client, customer_id, title="Cannot sign in")
+    expected = CaseAnalysis(
+        summary="Sign-in is failing.",
+        suggested_priority=CasePriority.HIGH,
+        recommended_next_step="Review the identity-provider configuration.",
+    )
+
+    def analyze(request: CaseAnalysisRequest) -> CaseAnalysis:
+        assert not db_session.in_transaction()
+        return expected
+
+    analysis_service = Mock(spec=CaseAnalysisService)
+    analysis_service.analyze.side_effect = analyze
+    app.dependency_overrides[get_case_analysis_service] = lambda: analysis_service
+
+    response = api_client.post(f"/cases/{created_case.json()['id']}/analysis")
+
+    assert response.status_code == 200
+    assert response.json() == expected.model_dump(mode="json")
 
 
 def test_analysis_failure_returns_safe_service_unavailable_response(

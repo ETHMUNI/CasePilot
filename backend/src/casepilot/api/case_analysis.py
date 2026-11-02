@@ -38,6 +38,8 @@ def analyze_case(
         description=case.description,
         current_priority=case.priority,
     )
+    # Return the pooled connection before waiting for the external LLM call.
+    session.close()
     try:
         return analysis_service.analyze(request)
     except AnalysisUnavailableError as error:
