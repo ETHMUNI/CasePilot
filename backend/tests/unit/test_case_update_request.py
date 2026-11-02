@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from casepilot.schemas.case_update_request import CaseUpdate
+from casepilot.requests.case_update_request import CaseUpdate
 
 
 @pytest.mark.parametrize("field", ["status", "priority"])
