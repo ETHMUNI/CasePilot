@@ -9,7 +9,10 @@ from sqlalchemy.orm import Session
 import casepilot.main
 from casepilot.daos import CustomerDAO
 from casepilot.database import get_session
+from casepilot.integrations.llm.dependencies import get_case_analysis_service
+from casepilot.integrations.llm.fake_analysis_provider import FakeAnalysisProvider
 from casepilot.main import app
+from casepilot.services.case_analysis_service import CaseAnalysisService
 
 
 @pytest.fixture
@@ -65,6 +68,7 @@ def test_openapi_documents_case_methods(openapi_client: TestClient) -> None:
 
     assert set(paths["/cases"]) == {"get", "post"}
     assert set(paths["/cases/{case_id}"]) == {"get", "patch"}
+    assert set(paths["/cases/{case_id}/analysis"]) == {"post"}
 
 
 def test_create_case_returns_created_case(
@@ -201,6 +205,56 @@ def test_get_case_returns_422_for_malformed_uuid(api_client: TestClient) -> None
     response = api_client.get("/cases/not-a-uuid")
 
     assert response.status_code == 422
+
+
+def test_analysis_endpoint_returns_fake_suggestion_without_changing_case(
+    api_client: TestClient, db_session: Session
+) -> None:
+    customer_id = _create_customer(db_session)
+    created_case = _create_case(
+        api_client, customer_id, title="Cannot sign in", description="SSO fails"
+    )
+    app.dependency_overrides[get_case_analysis_service] = lambda: CaseAnalysisService(
+        FakeAnalysisProvider()
+    )
+
+    response = api_client.post(f"/cases/{created_case.json()['id']}/analysis")
+    case_response = api_client.get(f"/cases/{created_case.json()['id']}")
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == "Demo analysis for: Cannot sign in"
+    assert response.json()["suggested_priority"] == "medium"
+    assert response.json()["recommended_next_step"]
+    assert case_response.json()["priority"] == "high"
+
+
+def test_analysis_failure_returns_safe_service_unavailable_response(
+    api_client: TestClient, db_session: Session
+) -> None:
+    customer_id = _create_customer(db_session)
+    created_case = _create_case(api_client, customer_id, title="Cannot sign in")
+    app.dependency_overrides[get_case_analysis_service] = lambda: CaseAnalysisService(
+        FakeAnalysisProvider(error=RuntimeError("secret test API key"))
+    )
+
+    response = api_client.post(f"/cases/{created_case.json()['id']}/analysis")
+
+    assert response.status_code == 503
+    assert "secret test API key" not in response.text
+
+
+def test_disabled_analysis_does_not_break_case_api(
+    api_client: TestClient, db_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CASEPILOT_LLM_PROVIDER", "disabled")
+    customer_id = _create_customer(db_session)
+    created_case = _create_case(api_client, customer_id, title="Cannot sign in")
+
+    analysis_response = api_client.post(f"/cases/{created_case.json()['id']}/analysis")
+    case_response = api_client.get(f"/cases/{created_case.json()['id']}")
+
+    assert analysis_response.status_code == 503
+    assert case_response.status_code == 200
 
 
 @pytest.mark.parametrize("field", ["status", "priority"])
