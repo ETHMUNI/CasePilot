@@ -8,10 +8,10 @@ from casepilot.database import get_session
 from casepilot.exceptions.case_not_found_error import CaseNotFoundError
 from casepilot.exceptions.customer_not_found_error import CustomerNotFoundError
 from casepilot.models import CaseStatus
-from casepilot.schemas.case_create_request import CaseCreate
-from casepilot.schemas.case_list_response import CaseListResponse
-from casepilot.schemas.case_response import CaseResponse
-from casepilot.schemas.case_update_request import CaseUpdate
+from casepilot.requests.case_create_request import CaseCreate
+from casepilot.requests.case_update_request import CaseUpdate
+from casepilot.responses.case_list_response import CaseListResponse
+from casepilot.responses.case_response import CaseResponse
 from casepilot.services.case_service import CaseService
 
 router = APIRouter(prefix="/cases", tags=["cases"])
