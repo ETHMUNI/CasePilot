@@ -212,53 +212,54 @@ for de indledende teknologivalg.
              PostgreSQL
 ```
 
-Diagrammet viser den tilsigtede arkitektur. I den nuværende Week 1-version findes
-kun FastAPI health-endpointet og databasefundamentet; case management, AI,
-knowledge retrieval og eksterne integrationer er fremtidige dele.
+Diagrammet viser den tilsigtede arkitektur. Den nuværende backend har et
+FastAPI health-endpoint, case management REST API og valgfri LLM-baseret
+sagsanalyse. Knowledge retrieval og øvrige eksterne integrationer er stadig
+planlagte dele.
 
-### Planned backend API
+### Backend API
 
-FastAPI er valgt til systemets API. Den planlagte API-flade omfatter:
+FastAPI er valgt til systemets API. Sagsoprettelse, læsning, opdatering,
+filtrering og pagination er implementeret. Sagsanalyse er valgfri og returnerer
+kun forslag til menneskelig gennemgang. Følgende API-områder er stadig planlagte:
 
-- sager
 - brugere
-- AI-analyser
 - knowledge documents
 - reviews
 - integrationskald
 
 ---
 
-### Planned application layer
+### Application layer
 
-Forretningslogik skal holdes adskilt fra HTTP, persistence og AI-integrationen.
-Følgende er eksempler på mulige fremtidige use cases, ikke eksisterende klasser:
+Forretningslogik holdes adskilt fra HTTP, persistence og AI-integrationen.
+`CaseService` håndterer sager, og `CaseAnalysisService` kalder den valgte
+analyseprovider. Andre use cases er fortsat planlagte:
 
 Eksempel:
 
 ```text
-CaseService
 ClassificationService
 KnowledgeService
 SuggestionService
 ReviewService
 ```
 
-Denne opdeling gør det muligt at holde almindelige use cases adskilt fra AI,
-når de moduler bliver implementeret.
+### AI layer
 
-### Planned AI layer
+Den implementerede minimumsfunktion analyserer en sag via LangChain med enten
+OpenAI eller Ollama. Provideren er slået fra som standard, og output valideres
+med Pydantic. Analysen returnerer forslag til en supportmedarbejder og ændrer
+ikke sagen. Fejl eller deaktiveret provider påvirker ikke de almindelige
+sagsendpoints.
 
-AI-komponenten håndterer:
+Følgende AI-funktioner er fortsat planlagte:
 
 - classification
 - summarization
 - query generation
 - retrieval
 - response generation
-
-LLM-output skal valideres, før det anvendes af resten af systemet. AI-integrationen
-er ikke implementeret endnu.
 
 ---
 
@@ -345,14 +346,14 @@ som beskrevet i afsnittet om backendudvikling.
 
 ### AI
 
-- LangChain (LLM-integration, embeddings og retrieval)
-- LangGraph (AI-workflow og state management)
+- LangChain bruges til LLM-integration og struktureret sagsanalyse.
+- LangChain-embeddings, retrieval og LangGraph-workflows er planlagte.
 - LLM API eller lokal model via Ollama
 - Structured output via Pydantic
 - Retrieval-Augmented Generation (RAG)
 - Semantic search med pgvector
 
-LangChain og LangGraph er planlagte teknologier; de introduceres, når AI-workflowet implementeres.
+Embeddings, retrieval og AI-workflows implementeres i senere trin.
 
 ### Lokal backendudvikling
 
@@ -384,6 +385,34 @@ kan læses gennem API'et. Svaret bør vise `"total": 6`:
 ```bash
 curl -fsS 'http://127.0.0.1:8000/cases?limit=20&offset=0'
 ```
+
+### Valgfri AI-sagsanalyse
+
+AI-analyse er slået fra som standard. For OpenAI-konfiguration tilføjes følgende
+til den lokale `.env` i projektroden, og API-processen genstartes:
+
+```dotenv
+CASEPILOT_LLM_PROVIDER=openai
+CASEPILOT_LLM_MODEL=<modelnavn>
+CASEPILOT_LLM_API_KEY=<api-nøgle>
+CASEPILOT_LLM_TIMEOUT_SECONDS=15
+```
+
+Opbevar kun den rigtige API-nøgle i den lokale `.env`; commit den aldrig. For
+Ollama sættes `CASEPILOT_LLM_PROVIDER=ollama` og `CASEPILOT_LLM_MODEL` til en
+installeret model. `CASEPILOT_LLM_BASE_URL` kan bruges til at ændre standard-
+serveradressen.
+
+Hent først et sags-ID fra `GET /cases`, og kald derefter
+`POST /cases/{case_id}/analysis`:
+
+```bash
+curl -fsS -X POST 'http://127.0.0.1:8000/cases/<case-id>/analysis'
+```
+
+Svaret er et forslag til supportmedarbejderen; det ændrer ikke sagen. Når analyse
+er slået fra eller provideren fejler, returnerer analyse-endpointet `503`, mens
+de almindelige sagsendpoints fortsat kan bruges.
 
 Kør tests og værktøjer fra `backend/`, mens databasen er startet:
 
