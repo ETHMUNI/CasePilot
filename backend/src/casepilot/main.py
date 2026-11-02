@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from casepilot.api.case_analysis import router as case_analysis_router
 from casepilot.api.cases import router as cases_router
 from casepilot.database import check_database_connection, engine
 
@@ -18,6 +19,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="CasePilot API", lifespan=lifespan)
 app.include_router(cases_router)
+app.include_router(case_analysis_router)
 
 
 @app.get("/health")
