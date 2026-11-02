@@ -1,9 +1,9 @@
 from collections.abc import Generator
+from typing import Any
 from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-from httpx import Response
 from sqlalchemy.orm import Session
 
 import casepilot.main
@@ -44,7 +44,7 @@ def _create_case(
     title: str,
     status: str = "open",
     description: str | None = "Login fails",
-) -> Response:
+) -> Any:
     response = api_client.post(
         "/cases",
         json={
@@ -55,7 +55,6 @@ def _create_case(
             "priority": "high",
         },
     )
-    assert isinstance(response, Response)
     return response
 
 
